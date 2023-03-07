@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "acmg-validation-tool"
+version = "0.1.0"
+description = ""
+authors = ["Andrey-Ukhnalyov-20 <andrey_ukhnalev20@mail.ru>"]
+readme = "README.md"
+packages = [{include = "acmg_validation_tool"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
