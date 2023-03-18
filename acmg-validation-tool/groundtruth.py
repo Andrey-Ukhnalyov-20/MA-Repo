@@ -12,6 +12,14 @@ parameters = {
 
 
 def make_request(parameter_name: str, parameter_value: str) -> str:
+    '''
+    INPUT:
+    parameter_name: str - name of parameter to request
+    parameter_value: str - value of parameter to request
+
+    OUTPUT:
+    response_transformed: str - result of "get" request transformed to str
+    '''
     parameters.update({parameter_name: parameter_value})
 
     response = requests.get(request_url, params=parameters)
