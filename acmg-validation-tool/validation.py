@@ -34,7 +34,7 @@ def parse_test_results(test_results: list) -> None:
                 ACMG_criteria_list.append(evidence)
 
 
-def make_analysis(groungtruth_file: str):
+def make_analysis(groungtruth_file: str) -> None:
     for variant in test_results_list:
         if groungtruth_file == 'no':
             json_from_database = groundtruth.make_request(
@@ -45,11 +45,15 @@ def make_analysis(groungtruth_file: str):
 
         groundtruth_dataframe = pd.read_csv('groundtruth.csv', sep=';')
         variant_from_groundtruth = groundtruth_dataframe.loc[groundtruth_dataframe['ClinVar variation ID'] == int(variant[0])]
-        ACMG_met_from_groundtruth = variant_from_groundtruth.loc[:, 'Evidence met'].to_list()[0].split(' ')
-        ACMG_not_met_from_groundtruth = variant_from_groundtruth.loc[:, 'Evidence not met'].to_list()[0].split(' ')
-        
-        TP = TN = FP = FN = 0
+        ACMG_met_from_groundtruth = variant_from_groundtruth.loc[:, 'Evidence met'].to_list()[0]
+        try: ACMG_met_from_groundtruth = ACMG_met_from_groundtruth.split(' ')
+        except: ACMG_met_from_groundtruth = []
+        ACMG_not_met_from_groundtruth = variant_from_groundtruth.loc[:, 'Evidence not met'].to_list()[0]
+        try: ACMG_not_met_from_groundtruth = ACMG_not_met_from_groundtruth.split(' ')
+        except: ACMG_not_met_from_groundtruth = []
+        # TP = TN = FP = FN = 0
         for criteria in variant[2]:
+            TP = FP = 0
             if criteria in ACMG_met_from_groundtruth:
                 TP = 1
             else: FP = 1
@@ -61,6 +65,7 @@ def make_analysis(groungtruth_file: str):
                 ACMG_criteria_validation[criteria][2] += FP
         
         for criteria in variant[3]:
+            TN = FN = 0
             if criteria in ACMG_not_met_from_groundtruth:
                 TN = 1
             else: FN = 1
@@ -77,17 +82,17 @@ def make_output(output_type: str, test_id: str) -> None:
     for criteria in ACMG_criteria_list:
         initial_parameters = ACMG_criteria_validation[criteria]
         try:
-            sensitivity = initial_parameters[0] / (initial_parameters[0] + initial_parameters[3])
-        except: sensitivity = 0
+            sensitivity = round(initial_parameters[0] / (initial_parameters[0] + initial_parameters[3]), 5)
+        except: sensitivity = '-'
         try:
-            precision = initial_parameters[0] / (initial_parameters[0] + initial_parameters[2])
-        except: precision = 0
+            precision = round(initial_parameters[0] / (initial_parameters[0] + initial_parameters[2]), 5)
+        except: precision = '-'
         try:
-            f1_score = (2 * precision * sensitivity) / (precision + sensitivity)
-        except: f1_score = 0
+            f1_score = round((2 * precision * sensitivity) / (precision + sensitivity), 5)
+        except: f1_score = '-'
         try:
-            accuracy = (initial_parameters[0] + initial_parameters[1]) / sum(initial_parameters)
-        except: accuracy = 0
+            accuracy = round((initial_parameters[0] + initial_parameters[1]) / sum(initial_parameters), 5)
+        except: accuracy = '-'
 
         if output_type == 'cli':
             output_lines = [
@@ -99,7 +104,7 @@ def make_output(output_type: str, test_id: str) -> None:
                     f'sencitivity: {sensitivity}',
                     f'precision: {precision}',
                     f'F1 score: {f1_score}',
-                    f'accuracy: {accuracy}'
+                    f'accuracy: {accuracy}',
                     ''
                     ]
             print('\n'.join(output_lines))
@@ -107,12 +112,15 @@ def make_output(output_type: str, test_id: str) -> None:
         if output_type == 'graph':
             x_axis = ['TP', 'TN', 'FP', 'FN']
             colors = ['blue', 'green', 'red', 'yellow']
+            fig = plt.figure()
             plt.bar(x_axis, ACMG_criteria_validation[criteria], color=colors)
             note_string = f'sencitivity: {sensitivity}, precision: {precision}, F1 score: {f1_score}, accuracy: {accuracy}'
-            plt.title(test_id + ' - ' + criteria + ': ' + '\n' + note_string)
+            fig.suptitle(test_id + ' - ' + criteria + ': ' + '\n' + note_string, fontsize=8)
             plt.xlabel('Parameters')
             plt.ylabel('Matched amount')
             plt.savefig(test_id + '_' + criteria + '.png')
+            plt.close()
+
 
 
 def cli_interface() -> tuple[str, str, str]:
@@ -125,11 +133,15 @@ def cli_interface() -> tuple[str, str, str]:
     return arguments.results, arguments.groundtruth, arguments.output
 
 
-if __name__ == "__main__":
+def main():
     test_results_file, gt, output = cli_interface()
-    with open('experiment.json', 'r') as file:
+    with open(test_results_file, 'r') as file:
         test_results_data = json.load(file)
         parse_test_results(test_results_data['variantsAnalised'])
         make_analysis(gt)
         make_output(output, test_results_data['testId'])
+
+
+if __name__ == "__main__":
+    main()
 
