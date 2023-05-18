@@ -1,3 +1,4 @@
 .venv
 acmg-validation-tool/*.csv
-
+acmg-validation-tool/*.json
+acmg-validation-tool/*.png

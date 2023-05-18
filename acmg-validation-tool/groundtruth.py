@@ -16,9 +16,9 @@ def make_request(request_url: str, parameter_name: str, parameter_value: str) ->
     parameters.update({parameter_name: parameter_value})
 
     response = requests.get(request_url, params=parameters)
-    print(type(response))
+    # print(type(response))
     response_transformed = response.json()
-    print(type(response_transformed))
+    # print(type(response_transformed))
 
     return response_transformed
 
@@ -68,7 +68,7 @@ def cli_interface() -> tuple[str, str, str]:
 def main():
     url, pn, pv = cli_interface()
     json_from_database = make_request(url, pn, pv)
-    print(type(json_from_database))
+    # print(type(json_from_database))
     save_to_csv(json_from_database['variantInterpretations'])
 
 
